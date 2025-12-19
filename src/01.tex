@@ -1,0 +1,110 @@
+% /Users/jerry/Desktop/LinearProgram/src/01.tex
+\documentclass[12pt]{ctexart}
+\usepackage[a4paper,margin=2.5cm]{geometry}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{booktabs}
+\usepackage{caption}
+\usepackage{float}
+
+\title{线性代数报告}
+\author{作者：姓名 \\ 学号：000000 \\ \small 指导教师：老师姓名}
+\date{\today}
+
+\theoremstyle{plain}
+\newtheorem{theorem}{定理}[section]
+\newtheorem{lemma}{引理}[section]
+\theoremstyle{definition}
+\newtheorem{definition}{定义}[section]
+\theoremstyle{remark}
+\newtheorem{remark}{注}[section]
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+本文为线性代数课程报告模板，包含矩阵与行列式、向量空间、线性变换、特征值与特征向量以及奇异值分解等核心内容，并给出若干例题与证明示例，便于撰写课程论文。
+\end{abstract}
+
+\tableofcontents
+\bigskip
+
+\section{引言}
+简要说明研究目的、背景与文章结构。线性代数是现代数学与工程的基础，在数据分析、信号处理与数值方法中有广泛应用。
+
+\section{矩阵与行列式}
+\begin{definition}[矩阵]
+大小为 $m\times n$ 的矩阵 $A=(a_{ij})$ 表示为
+\[
+A=\begin{pmatrix}
+a_{11} & a_{12} & \cdots & a_{1n} \\
+a_{21} & a_{22} & \cdots & a_{2n} \\
+\vdots & \vdots & \ddots & \vdots \\
+a_{m1} & a_{m2} & \cdots & a_{mn}
+\end{pmatrix}.
+\]
+\end{definition}
+
+行列式的基本性质：对换行符号改变量、行列式的乘法性等。示例：
+\[
+\det(AB)=\det(A)\det(B).
+\]
+
+\section{向量空间与基}
+\begin{definition}[向量空间]
+设 $V$ 为域 $\mathbb{F}$ 上的集合，若对加法与数乘封闭并满足向量空间公理，则称 $V$ 为向量空间。
+\end{definition}
+
+基与维数的定义：若向量组线性无关且张成空间，则为基，基的元素个数称为维数。
+
+\section{线性变换}
+线性变换 $T: V\to W$ 满足 $T(\alpha u+\beta v)=\alpha T(u)+\beta T(v)$。
+若在基下取矩阵表示，则研究其秩、像与核：
+\[
+\dim V = \dim(\ker T) + \dim(\operatorname{im} T).
+\]
+
+\section{特征值与特征向量}
+\begin{definition}
+设 $A\in\mathbb{C}^{n\times n}$，若存在 $\lambda\in\mathbb{C}$ 与非零向量 $v$ 使得 $Av=\lambda v$，则称 $\lambda$ 为 $A$ 的特征值，$v$ 为对应的特征向量。
+\end{definition}
+
+特征多项式与求解示例：对于二维矩阵
+\[
+A=\begin{pmatrix}2 & 1\\ 1 & 2\end{pmatrix},
+\]
+特征多项式为 $\det(A-\lambda I)=(2-\lambda)^2-1=\lambda^2-4\lambda+3$，得特征值 $\lambda=1,3$。对应特征向量可解线性方程 $(A-\lambda I)v=0$。
+
+\begin{theorem}[对称矩阵的谱定理]
+若 $A$ 为实对称矩阵，则存在正交矩阵 $Q$ 使得 $Q^\top A Q = \operatorname{diag}(\lambda_1,\dots,\lambda_n)$。
+\end{theorem}
+\begin{proof}
+略（可引用标准教材证明）。
+\end{proof}
+
+\section{奇异值分解（SVD）}
+任何矩阵 $A\in\mathbb{R}^{m\times n}$ 可分解为
+\[
+A=U\Sigma V^\top,
+\]
+其中 $U\in\mathbb{R}^{m\times m}$、$V\in\mathbb{R}^{n\times n}$ 为正交矩阵，$\Sigma$ 为对角矩阵，非负对角线元素为奇异值。SVD 在最小二乘与低秩近似中有重要应用：最佳秩-$k$ 近似由截断奇异值构成。
+
+\section{数值例题}
+计算例：对矩阵
+\[
+A=\begin{pmatrix}3 & 1\\ 0 & 2\end{pmatrix},
+\]
+求特征值与特征向量。特征多项式 $(3-\lambda)(2-\lambda)=0$，故 $\lambda_1=3,\lambda_2=2$。对应特征向量分别为 $v_1=(1,0)^\top,\; v_2=(1,-1)^\top$（可归一化）。
+
+\section{结论}
+总结本文内容并指出可拓展方向：正交对角化、Jordan 标准型、数值稳定性与迭代方法等。
+
+\begin{thebibliography}{9}
+\bibitem{strang}
+G. Strang, \emph{Linear Algebra and Its Applications}, 4th ed., Brooks Cole, 2006.
+\bibitem{horn}
+R. A. Horn and C. R. Johnson, \emph{Matrix Analysis}, Cambridge University Press, 1985.
+\end{thebibliography}
+
+\end{document}
