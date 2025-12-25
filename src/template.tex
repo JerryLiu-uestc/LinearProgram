@@ -1,0 +1,95 @@
+\documentclass[12pt,a4paper]{article}
+
+% ====== 基础宏包（尽量少）======
+\usepackage{ctex}        % 中文支持
+\usepackage{geometry}    % 页面设置
+\usepackage{amsmath,amssymb} % 基本数学公式
+\usepackage{graphicx}    % 插图
+\usepackage{setspace}    % 行距
+
+% ====== 页面设置 ======
+\geometry{left=2.5cm,right=2.5cm,top=2.5cm,bottom=2.5cm}
+\onehalfspacing
+
+\begin{document}
+
+% =========================
+% 标题部分
+% =========================
+\begin{center}
+    {\LARGE \textbf{文章题目}} \\[1em]
+    % ↑ 在此填写论文题目
+
+    学号1\ 姓名1,\ 学号2\ 姓名2,\ 学号3\ 姓名3
+    % ↑ 在此填写作者信息（学号 + 姓名）
+\end{center}
+
+\vspace{1em}
+
+% =========================
+% 摘要与关键词
+% =========================
+\noindent\textbf{摘要：}
+% ↑ 在此撰写摘要：
+% 简要说明研究背景、研究方法、主要结果和结论
+本文的主要思想和结果。
+
+\vspace{0.5em}
+
+\noindent\textbf{关键词：}
+特征值；非负矩阵分解
+% ↑ 在此填写关键词，中文分号隔开
+
+\vspace{1.5em}
+
+% =========================
+% 正文开始
+% =========================
+
+\section{研究背景}
+% ↑ 介绍研究背景、研究动机和相关工作
+% 说明：做什么？为什么做？别人怎么做？本文打算怎么做？
+
+本节介绍研究背景与研究意义。
+
+换行的效果
+\section{第二节标题自拟}
+% ↑ 可介绍理论基础、模型假设或算法思想
+% 本节可以拆分为若干小节
+
+\subsection{小节标题示例}
+% ↑ 在此撰写具体内容，如数学模型或算法推导
+
+这里写具体内容。
+
+\section{第三节标题自拟}
+% ↑ 描述本文提出的主要方法、理论或改进算法
+
+这里描述你自己设计的理论或算法。
+
+\section{第四节标题自拟}
+% ↑ 实验与结果分析
+% 可描述实验环境、参数设置、对比结果等
+
+这里给出实验结果与分析。
+
+\section{结论与展望}
+% ↑ 总结全文工作，并给出未来可进一步研究的方向
+
+本文总结了主要工作，并对未来研究进行了展望。
+
+% =========================
+% 参考文献
+% =========================
+\begin{thebibliography}{99}
+
+\bibitem{Duff1986}
+I.~S. Duff, A.~M. Erisman, J.~K. Reid,
+\textit{Direct Methods for Sparse Matrices},
+Oxford University Press, 1986.
+
+% ↑ 在此继续添加参考文献
+
+\end{thebibliography}
+
+\end{document}

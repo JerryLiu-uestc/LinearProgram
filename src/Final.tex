@@ -1,0 +1,269 @@
+\documentclass[12pt,a4paper]{article}
+
+% ====== 基础宏包 ======
+\usepackage{ctex}                 % 中文支持
+\usepackage{geometry}             % 页面设置
+\usepackage{amsmath,amssymb}      % 数学公式
+\usepackage{graphicx}             % 插图
+\usepackage{setspace}             % 行距
+
+% ====== 页面设置 ======
+\geometry{left=2.5cm,right=2.5cm,top=2.5cm,bottom=2.5cm}
+\onehalfspacing
+
+\begin{document}
+
+% =========================
+% 标题部分
+% =========================
+\begin{center}
+    {\LARGE \textbf{图像压缩中的线性代数方法研究}} \\[1em]
+    学号：XXXXXXXX \quad 姓名：XXXX
+\end{center}
+
+\vspace{1em}
+
+% =========================
+% 摘要与关键词
+% =========================
+\noindent\textbf{摘要：}
+图像压缩是数字图像处理中重要的研究方向，其核心问题在于如何在尽量减少信息损失的前提下降低数据冗余。
+线性代数为图像压缩提供了坚实的理论基础。
+本文从线性代数角度出发，介绍了图像压缩中常见的数学方法，并重点分析了快速傅里叶变换在图像压缩中的线性代数原理。
+
+\vspace{0.5em}
+
+\noindent\textbf{关键词：}
+图像压缩；线性代数；快速傅里叶变换；基变换
+
+\vspace{1.5em}
+
+% =========================
+% 正文开始
+% =========================
+\section{引言}
+
+\section{研究背景}
+
+随着数字图像与多媒体技术的迅速发展，图像数据规模不断增长。
+如何在保证图像质量的前提下降低存储与传输成本，成为图像处理领域的重要问题。
+图像压缩技术正是在这一背景下发展起来的，而其中大量方法均可归结为线性代数中的矩阵运算与线性变换。
+
+\section{快速傅里叶变换（FFT）}
+快速傅里叶变换（Fast Fourier Transform，FFT）是离散傅里叶变换（Discrete Fourier Transform，DFT）的一种高效计算方法。
+尽管 FFT 常被视为算法层面的优化，但从线性代数的角度来看，其本质是对离散傅里叶线性变换所对应矩阵结构的分解与重排。
+这一思想在图像压缩等应用中具有重要的理论意义。
+
+\subsection{傅立叶变换}
+傅里叶变换（Fourier Transform，FT）是一种分析信号的方法，它可以分析信号的成分，也可反过来用这些成分合成信号。
+通过使用天然具有正交性的三角函数（sin、cos）作为信号的成分，借助幅角的形式表示频率和相位，傅立叶变换实现了信号从时域到频域的变换。
+
+设 $f(t)$ 是关于时间 $t$ 的函数，则傅立叶变换可以检测频率 $\omega$ 的周期在 $f(t)$ 出现的程度：
+
+\begin{equation*}
+F(\omega)=\mathbb{F}[f(t)]=\int_{-\infty}^{\infty}f(t)\mathrm{e}^{-\mathrm{i}{\omega}t}dt
+\end{equation*}
+
+它的逆变换是
+
+\begin{equation*}
+f(t)=\mathbb{F}^{-1}[F(\omega)]=\frac{1}{2\pi}\int_{-\infty}^{\infty}F(\omega)\mathrm{e}^{\mathrm{i}{\omega}t}d\omega
+\end{equation*}
+
+逆变换的形式与正变换非常类似，分母 $2\pi$ 恰好是指数函数的周期。
+
+傅里叶变换相当于将时域的函数与周期为 $2\pi$ 的复指数函数进行连续的内积。逆变换仍旧为一个内积。
+
+\subsection{离散傅里叶变换}
+离散傅里叶变换（Discrete Fourier transform，DFT）是傅里叶变换在时域和频域上都呈离散的形式，
+将信号的时域采样变换为其 DTFT（discrete-time Fourier transform）的频域采样。
+
+相应地，我们可以将FT积分形式的连续的函数内积改写成DFT求和形式的内积。
+
+设 $\{x_n\}_{n=0}^{N-1}$ 是某一满足有限性条件的序列，它的离散傅里叶变换（DFT）为：
+
+\begin{equation*}
+X_k=\sum_{n=0}^{N-1}x_n\mathrm{e}^{-\mathrm{i}\frac{2\pi}{N}kn}
+\end{equation*}
+
+通常以符号 $\mathcal {F}$ 表示这一变换，即
+
+\begin{equation*}
+\hat{x}=\mathcal{F}x
+\end{equation*}
+
+类似于积分形式，它的逆离散傅里叶变换（IDFT）为：
+
+\begin{equation*}
+x_n=\frac{1}{N}\sum_{k=0}^{N-1}X_k\mathrm{e}^{\mathrm{i}\frac{2\pi}{N}kn}
+\end{equation*}
+
+可以记为：
+
+\begin{equation*}
+x=\mathcal{F}^{-1}\hat{x}
+\end{equation*}
+
+实际上，DFT 和 IDFT 变换式前面的归一化系数并不重要。在上面的定义中，DFT 和 IDFT 前的系数分别为 $1$ 和 $\frac {1}{N}$。有时我们会将这两个系数都改 $\frac{1}{{\sqrt{N}}}$。
+
+离散傅里叶变换仍旧是时域到频域的变换。由于求和形式的特殊性，可以有其他的解释方法。
+
+如果把序列 $x_n$ 看作多项式 $f(x)$ 的 $x^n$ 项系数，则计算得到的 $X_k$ 恰好是多项式 $f(x)$ 代入单位根 $\mathrm{e}^{\frac{-2\pi \mathrm{i}k}{N}}$ 的点值 $f(\mathrm{e}^{\frac{-2\pi \mathrm{i}k}{N}})$。
+这便构成了卷积定理的另一种解释办法，即对多项式进行特殊的求值操作。离散傅里叶变换恰好是多项式在单位根处进行求值。
+\subsection{矩阵表示}
+由于离散傅立叶变换是一个线性算子，所以它可以用矩阵乘法来描述。在矩阵表示法中，离散傅立叶变换表示如下：
+
+\begin{equation*}
+\begin{bmatrix}
+    X_{0}  \\
+    X_{1}  \\
+    X_{2}  \\
+    \vdots \\
+    X_{N-1}
+\end{bmatrix}
+=
+\begin{bmatrix}
+    1      & 1            & 1               & \cdots & 1                   \\
+    1      & \omega       & \omega^{2}      & \cdots & \omega^{N-1}        \\
+    1      & \omega^{2}   & \omega^{4}      & \cdots & \omega^{2(N-1)}     \\
+    \vdots & \vdots       & \vdots          & \ddots & \vdots              \\
+    1      & \omega^{N-1} & \omega^{2(N-1)} & \cdots & \omega^{(N-1)(N-1)}
+\end{bmatrix}
+\begin{bmatrix}
+    x_{0}  \\
+    x_{1}  \\
+    x_{2}  \\
+    \vdots \\
+    x_{N-1}
+\end{bmatrix}
+\end{equation*}
+
+其中$\omega = \mathrm{e}^{-\mathrm{i}\frac{2\pi}{N}}$表示N次单位根。
+
+
+设一维离散信号（或图像的一行像素）表示为向量：
+\begin{equation*}
+\mathbf{x} = (x_0, x_1, \dots, x_{N-1})^\mathsf{T} \in \mathbb{C}^N.
+\end{equation*}
+
+变换后频域强度表示为向量：
+\begin{equation*}
+\mathbf{X} = (X_0, X_1, \dots, X_{N-1})^\mathsf{T} \in \mathbb{C}^N.
+\end{equation*}
+
+离散傅里叶变换可以表示为如下线性变换：
+\begin{equation*}
+\mathbf{X} = F_N \mathbf{x},
+\end{equation*}
+
+其中 $F_N \in \mathbb{C}^{N \times N}$ 为离散傅里叶变换矩阵
+
+由此可见，DFT 本质上是一个复向量空间上的线性映射，
+其作用是将信号从标准基下的表示转换为一组由复指数函数张成的频率基下的表示。
+在图像压缩中，该过程对应于从空间域到频率域的变换。
+
+\subsection{多项式视角与基变换解释}
+
+若将向量 $\mathbf{x}$ 视为多项式
+\begin{equation*}
+f(t) = \sum_{n=0}^{N-1} x_n t^n,
+\end{equation*}
+
+则 DFT 的结果满足
+
+\begin{equation*}
+X_k = f(\omega_N^k), \quad k = 0,1,\dots,N-1.
+\end{equation*}
+
+从线性代数角度看，该过程等价于一次坐标表示的改变，即从幂函数基下的系数表示，转换为复指数函数基下坐标的表示。
+这种基变换通常能够使信号的能量集中于少数低频分量，为图像压缩中的系数截断提供理论依据。
+
+\subsection{FFT 的矩阵分解思想}
+
+直接计算离散傅里叶变换需要进行一次 $N \times N$ 的矩阵--向量乘法，其时间复杂度为 $O(N^2)$。
+FFT 的核心思想在于，DFT 矩阵具有高度结构化的形式，可以利用分治的思想通过置换矩阵与分块矩阵分解为多个低维 DFT 矩阵的组合，
+将复杂度降到 $O(N \log N)$。
+进一步还可以使用蝶形运算、位逆序置换等技巧加速运算。
+
+这一过程本质上是将一个高维线性算子分解为若干低维线性算子的复合，体现了线性代数中通过矩阵分解与基重排来降低计算复杂度的基本思想。
+
+\subsection{FFT 的矩阵分解与分治解释}
+
+离散傅里叶变换可以表示为矩阵形式
+\begin{equation*}
+\mathbf{X} = F_N \mathbf{x},
+\end{equation*}
+
+其中 $F_N$ 为离散傅里叶变换矩阵。
+当 $N$ 为 $2$ 的幂时（事实上当N不为2的幂，我们可以通过补零的方式构造成2的幂），$F_N$ 具有良好的递归结构。
+
+通过对输入向量进行适当的重排（对应于置换矩阵），$F_N$ 可以分解为如下形式：
+\begin{equation*}
+F_N
+=
+\begin{pmatrix}
+I & D \\
+I & -D
+\end{pmatrix}
+\begin{pmatrix}
+F_{N/2} & 0 \\
+0 & F_{N/2}
+\end{pmatrix}
+P,
+\end{equation*}
+
+其中 $P$ 为置换矩阵，$D$ 为由单位复根构成的对角矩阵，$F_{N/2}$ 为低维离散傅里叶变换矩阵。
+
+该分解表明，FFT 的分治过程在本质上是对离散傅里叶变换矩阵的递归分块分解。
+通过将一个高维线性算子表示为多个低维线性算子与简单矩阵的乘积，FFT 显著降低了计算复杂度。
+
+\subsection{蝶形运算的线性代数意义}
+
+在快速傅里叶变换的分治过程中，所谓的“蝶形运算”并非单纯的计算技巧，而是局部线性变换在低维子空间中的体现。
+设在 FFT 的某一层分治中，已得到两个子问题的结果 $u$ 与 $v$，则其合并过程可表示为
+\begin{equation*}
+\begin{pmatrix}
+y_1 \\
+ y_2
+\end{pmatrix}
+=
+\begin{pmatrix}
+1 & \omega \\
+1 & -\omega
+\end{pmatrix}
+\begin{pmatrix}u \\
+ v
+\end{pmatrix},
+\end{equation*}
+其中 $\omega$ 为相应的单位复根。
+
+从线性代数角度看，上式表明蝶形运算实质上是一个作用在二维向量空间上的线性变换。
+整个 FFT 过程可以理解为在不同二维子空间上反复施加此类线性映射，从而完成高维离散傅里叶变换。
+这种将高维线性变换拆解为若干低维线性变换的思想，与线性代数中通过分块矩阵简化运算的思想是一致的。
+
+\subsection{FFT 在图像压缩中的意义}
+
+在图像压缩问题中，FFT 及其相关变换主要体现了以下线性代数思想：
+首先，通过基变换将图像从像素基转换到频率基；
+其次，利用变换后系数的能量集中性，对幅值较小的高频分量进行舍弃；
+最后，依赖傅里叶变换的可逆性，实现压缩图像的近似重构。
+这些性质使 FFT 成为图像压缩中重要的理论工具。
+
+\section{结论}
+
+本文从线性代数的角度分析了快速傅里叶变换的数学本质，并讨论了其在图像压缩中的应用意义。
+FFT 通过对线性变换矩阵结构的分解，大幅降低了计算复杂度，体现了线性代数理论在实际问题中的重要作用。
+
+% =========================
+% 参考文献
+% =========================
+\begin{thebibliography}{99}
+
+\bibitem{FFT}
+A.~V. Oppenheim, R.~W. Schafer,
+\textit{Discrete-Time Signal Processing},
+Prentice Hall, 2010.
+
+\end{thebibliography}
+
+\end{document}
