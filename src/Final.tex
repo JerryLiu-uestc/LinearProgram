@@ -249,10 +249,125 @@ y_1 \\
 最后，依赖傅里叶变换的可逆性，实现压缩图像的近似重构。
 这些性质使 FFT 成为图像压缩中重要的理论工具。
 
-\section{结论}
+% =========================================================
+% 4. PAC数学原理
+% =========================================================
+\section{PAC数学原理}
+PAC（Principal Component Analysis of Channels，通道主成分分析）算法是线性代数理论在图像压缩领域的典型应用。尽管其在应用层面常被视为一种基于统计特性的特征提取技术，但其数学内核植根于矩阵的低秩近似理论。本节将从统计学与代数学两个维度，严谨阐述该算法的数学原理。
 
-本文从线性代数的角度分析了快速傅里叶变换的数学本质，并讨论了其在图像压缩中的应用意义。
-FFT 通过对线性变换矩阵结构的分解，大幅降低了计算复杂度，体现了线性代数理论在实际问题中的重要作用。
+\subsection{统计学视角：协方差与最大方差理论}
+在数学建模中，我们将图像的单颜色通道视为一个矩阵 $A \in \mathbb{R}^{H \times W}$，其中 $H$ 为图像高度，$W$ 为宽度。为了利用主成分分析（PCA）提取图像的主要特征，首先需要将图像的每一行视为 $W$ 维空间中的一个数据样本。
+
+设图像数据的行向量集合为 $\{\mathbf{a}_1, \mathbf{a}_2, \dots, \mathbf{a}_H\}$，其中 $\mathbf{a}_i \in \mathbb{R}^W$。为了消除原点偏移对二阶统计量的影响，必须对数据进行中心化处理。计算样本均值向量 $\mathbf{\mu}$：
+\begin{equation}
+    \mathbf{\mu} = \frac{1}{H}\sum_{i=1}^H \mathbf{a}_i
+\end{equation}
+中心化后的数据矩阵 $X$ 定义为 $X = A - \mathbf{1}\mathbf{\mu}$，其中 $\mathbf{1}$ 为 $H$ 维全 1 列向量。此时，样本的协方差矩阵 $C$ 可表示为：
+\begin{equation}
+    C = \frac{1}{H-1} X^\mathsf{T} X
+\end{equation}
+协方差矩阵 $C$ 是一个 $W \times W$ 的实对称矩阵。根据谱定理（Spectral Theorem），实对称矩阵必然可以被正交对角化，即存在正交矩阵 $P$ 和对角矩阵 $\Lambda$，使得 $C = P \Lambda P^\mathsf{T}$。
+
+PAC 算法的目标是寻找一组正交基，使得数据在该基上的投影方差最大。数学推导表明，这组最优基恰好是协方差矩阵 $C$ 的特征向量（即矩阵 $P$ 的列向量）。在图像信号中，绝大多数能量（方差）集中在前 $k$ 个最大特征值对应的方向上，这为通过舍弃次要分量实现数据压缩提供了坚实的统计学基础。
+
+\subsection{代数视角：奇异值分解 (SVD)}
+在实际的数值计算中，显式构建协方差矩阵 $X^\mathsf{T} X$ 不仅计算复杂度高达 $O(W^2 H)$，且极易引入浮点数截断误差，导致数值不稳定。因此，现代图像压缩算法通常直接对中心化矩阵 $X$ 进行奇异值分解（Singular Value Decomposition, SVD）。
+
+对于任意实矩阵 $X \in \mathbb{R}^{H \times W}$，存在分解：
+\begin{equation}
+    X = U \Sigma V^\mathsf{T}
+\end{equation}
+其中：
+\begin{itemize}
+    \item $U \in \mathbb{R}^{H \times H}$ 是左奇异向量矩阵，其列向量构成了行空间的正交基；
+    \item $\Sigma \in \mathbb{R}^{H \times W}$ 是对角矩阵，其对角元素 $\sigma_i$ 为奇异值，且满足 $\sigma_1 \ge \sigma_2 \ge \dots \ge 0$；
+    \item $V \in \mathbb{R}^{W \times W}$ 是右奇异向量矩阵，其列向量构成了定义域的正交基。
+\end{itemize}
+
+SVD 与 PCA 的内在联系可以通过以下推导揭示：
+\begin{equation}
+    C \propto X^\mathsf{T} X = (V \Sigma^\mathsf{T} U^\mathsf{T})(U \Sigma V^\mathsf{T}) = V (\Sigma^\mathsf{T} \Sigma) V^\mathsf{T} = V \Sigma^2 V^\mathsf{T}
+\end{equation}
+由此可见，SVD 分解得到的右奇异向量矩阵 $V$ 恰好是协方差矩阵的特征向量矩阵，而奇异值 $\sigma_i$ 与特征值 $\lambda_i$ 满足关系 $\lambda_i \propto \sigma_i^2$。因此，SVD 提供了一种数值上更稳定、计算上更直接的方法来求解主成分。
+
+\subsection{最优低秩近似与 Eckart-Young-Mirsky 定理}
+PAC 压缩的核心步骤是矩阵截断（Truncation）。我们仅保留前 $k$ 个最大的奇异值及其对应的奇异向量，构造近似矩阵 $X_k$：
+\begin{equation}
+    X_k = U_k \Sigma_k V_k^\mathsf{T}
+\end{equation}
+其中 $U_k$ 为 $U$ 的前 $k$ 列，$\Sigma_k$ 为前 $k$ 个奇异值构成的对角阵，$V_k^\mathsf{T}$ 为 $V^\mathsf{T}$ 的前 $k$ 行。
+
+根据 \textbf{Eckart-Young-Mirsky 定理}，在所有秩为 $k$ 的矩阵集合中，$X_k$ 是原矩阵 $X$ 在弗罗贝尼乌斯范数（Frobenius Norm）意义下的全局最优近似：
+\begin{equation}
+    \min_{\text{rank}(Y)=k} \|X - Y\|_F = \|X - X_k\|_F = \sqrt{\sum_{i=k+1}^{\min(H,W)} \sigma_i^2}
+\end{equation}
+该定理从数学上严格保证了，在给定的存储预算（即秩 $k$）下，截断 SVD 能够保留原始图像最多的能量信息，是理论上的最优线性压缩方案。
+
+% =========================================================
+% 5. PAC实验分析
+% =========================================================
+\section{PAC实验分析}
+
+\subsection{算法实现流程}
+为了验证上述理论的有效性，本文基于 Python 设计并实现了 PAC 图像压缩算法。算法流程严格遵循数学推导，针对 RGB 彩色图像的三个通道分别并行处理，具体步骤如下：
+\begin{enumerate}
+    \item \textbf{通道分离 (Channel Separation)}：将输入的三维图像张量 $I \in \mathbb{R}^{H \times W \times 3}$ 分解为 R、G、B 三个独立的二维矩阵。
+    \item \textbf{中心化预处理 (Centering)}：对每个通道矩阵计算行均值向量，并执行减均值操作。这一步至关重要，它确保了数据分布中心位于零点，从而使 SVD 分解能够正确反映数据的方差结构。
+    \item \textbf{截断编码 (Truncated Encoding)}：利用 SVD 算法分解各通道矩阵，并仅保留前 $k$ 个奇异分量 $(U_k, \Sigma_k, V_k)$ 以及均值向量作为压缩载荷（Payload）。
+    \item \textbf{逆向重建 (Reconstruction)}：解码端通过矩阵乘法 $\hat{X} = U_k \Sigma_k V_k^\mathsf{T}$ 恢复近似数据，加上均值向量后，将数值截断至 $[0, 255]$ 区间并合并通道，生成最终的重建图像。
+\end{enumerate}
+
+\subsection{实验设置}
+实验采用 Kodak Lossless True Color Image Suite 数据集，该数据集包含多幅纹理复杂度各异的高分辨率彩色图像（如 `kodim01.png` 至 `kodim24.png`）。我们设定主成分保留数 $k \in \{5, 10, 20, 40, 80\}$，并采用以下指标进行量化评估：
+\begin{itemize}
+    \item \textbf{PSNR (峰值信噪比)}：衡量图像重建质量的客观标准，单位 dB，数值越高代表失真越小。
+    \item \textbf{SSIM (结构相似性)}：反映人眼对图像亮度、对比度和结构信息的感知程度，范围 $[0, 1]$，接近 1 表示结构保留完美。
+    \item \textbf{CR (压缩率)}：定义为原始图像大小与压缩后参数（采用 Float32 格式存储）大小的比值。
+\end{itemize}
+
+\subsection{结果与讨论}
+为了深入分析算法在不同纹理特征下的表现，我们选取了纹理细节丰富的样本（Image 1）和结构相对简单的样本（Image 10）作为典型代表。详细实验数据如表 \ref{tab:results} 所示。
+
+\begin{table}[htbp]
+    \centering
+    \caption{不同保留秩 $k$ 下的图像压缩性能数据（数据来源：实验结果）}
+    \label{tab:results}
+    \setlength{\tabcolsep}{3.5mm}
+    \renewcommand{\arraystretch}{1.2}
+    \begin{tabular}{ccccccc}
+    \hline
+    \textbf{样本ID} & \textbf{Rank (k)} & \textbf{MSE} & \textbf{PSNR (dB)} & \textbf{SSIM} & \textbf{CR (理论)} \\ \hline
+    \multirow{5}{*}{Image 1} 
+      & 5 & 495.72 & 21.18 & 0.429 & 13.70 \\
+      & 10 & 379.83 & 22.33 & 0.509 & 7.24 \\
+      & 20 & 282.66 & 23.62 & 0.593 & 3.73 \\
+      & 40 & 195.52 & 25.22 & 0.687 & 1.89 \\
+      & 80 & 116.29 & 27.48 & 0.789 & 0.95 \\ \hline
+    \multirow{5}{*}{Image 10} 
+      & 5 & 348.65 & 22.71 & 0.630 & 14.21 \\
+      & 10 & 225.15 & 24.61 & 0.663 & 7.38 \\
+      & 20 & 145.48 & 26.50 & 0.709 & 3.76 \\
+      & 40 & 84.70 & 28.85 & 0.779 & 1.90 \\
+      & 80 & 43.05 & 31.79 & 0.853 & 0.95 \\ \hline
+    \end{tabular}
+\end{table}
+
+\subsubsection{质量与秩的权衡分析}
+实验数据清晰地展示了压缩质量与秩 $k$ 之间的正相关关系：
+\begin{itemize}
+    \item \textbf{低秩区间 ($k=5$)}：此时压缩率极高（CR $> 13$），但 SSIM 较低（Image 1 仅为 0.429）。图像丢失了大量高频纹理细节，仅保留了大致的颜色分布和低频轮廓，视觉体验较差。
+    \item \textbf{中秩区间 ($k=20 \sim 40$)}：这是性能平衡的最优区间。PSNR 提升至 25dB 以上，SSIM 接近 0.7-0.8。算法在保持 2-4 倍压缩率的同时，成功恢复了图像的主要结构信息，达到了较好的视觉可用性。
+    \item \textbf{高秩区间 ($k=80$)}：图像质量进一步提升（PSNR $> 27$dB），细节还原度极高，但存储代价显著增加。
+\end{itemize}
+
+\subsubsection{存储精度与“负压缩”现象的工程分析}
+通过深入分析实验数据，我们发现了一个值得注意的工程现象：当 $k=80$ 时，理论压缩率 CR 降至 0.95，出现了“负压缩”（即压缩后的文件反而比原图大）。
+这一现象的根本原因在于数据存储类型的差异。原始图像像素使用 8 位无符号整数（uint8，1字节/像素）存储；而 PAC 算法分解出的奇异向量矩阵（$U$ 和 $V$）是连续实数，通常需要 32 位浮点数（float32，4字节/数值）以维持运算精度。
+虽然 SVD 大幅减少了数据的“维度数量”（从 $H \times W$ 降维到 $k$ 维子空间），但单个数据的“位宽”增加了 4 倍。当保留的秩 $k$ 较大时，维度缩减带来的红利被浮点数存储的开销完全抵消。这表明，基于 SVD 的压缩方法如果直接存储浮点矩阵，并不适合高保真的无损级压缩。在实际工程应用中，必须结合量化（Quantization）技术将浮点数降级（如转为 float16 或 uint8），才能在高 $k$ 值下重获压缩优势。
+
+\subsubsection{图像内容的频谱敏感性}
+对比 Image 1（复杂纹理）和 Image 10（简单结构）的数据可以发现：在相同的 $k=40$ 下，Image 10 的 PSNR (28.85 dB) 显著优于 Image 1 (25.22 dB)。
+这验证了 PAC 算法对图像内容的频谱分布具有高度敏感性。Image 10 包含更多平滑区域，其能量在频域上更集中于少数几个最大的奇异值（奇异值衰减速度更快），因此该算法能以更低的信息代价（更小的 $k$）还原更多的图像信息。这一特性也体现了 SVD 作为一种“自适应基变换”，相较于固定基变换（如 FFT/DCT）更能捕捉数据的内在统计结构。
 
 % =========================
 % 参考文献
