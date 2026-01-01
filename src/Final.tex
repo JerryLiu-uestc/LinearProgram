@@ -6,6 +6,8 @@
 \usepackage{amsmath,amssymb}      % 数学公式
 \usepackage{graphicx}             % 插图
 \usepackage{setspace}             % 行距
+\usepackage{hyperref}             % 超链接（用于引用网站）
+\usepackage{multirow}             % 多行单元格
 
 % ====== 页面设置 ======
 \geometry{left=2.5cm,right=2.5cm,top=2.5cm,bottom=2.5cm}
@@ -15,10 +17,10 @@
 
 % =========================
 % 标题部分
-% =========================
+% ========================
 \begin{center}
     {\LARGE \textbf{图像压缩中的线性代数方法研究}} \\[1em]
-    学号：XXXXXXXX \quad 姓名：还好
+    2025082001013 刘泰宏，2025082001012 刘林皓，2025082001007 况光奇 \\[1em]
 \end{center}
 
 \vspace{1em}
@@ -27,14 +29,12 @@
 % 摘要与关键词
 % =========================
 \noindent\textbf{摘要：}
-图像压缩是数字图像处理中重要的研究方向，其核心问题在于如何在尽量减少信息损失的前提下降低数据冗余。
-线性代数为图像压缩提供了坚实的理论基础。
-本文从线性代数角度出发，介绍了图像压缩中常见的数学方法，并重点分析了快速傅里叶变换在图像压缩中的线性代数原理。
+本文从线性代数角度探讨图像压缩，比较了快速傅里叶变换（FFT）的矩阵分解与基于奇异值分解（SVD/PAC）的低秩近似，并在 Kodak 数据集上验证了保留奇异值数量 $k$ 对重建质量（PSNR、SSIM）与压缩率的影响。同时指出了浮点存储导致的“负压缩”现象并提出量化处理作为对策。
 
 \vspace{0.5em}
 
 \noindent\textbf{关键词：}
-图像压缩；线性代数；快速傅里叶变换；基变换
+图像压缩；线性代数；FFT；SVD；低秩近似
 
 \vspace{1.5em}
 
@@ -43,12 +43,12 @@
 % =========================
 \section{引言}
 
-\section{研究背景}
+随着图像与多媒体数据量快速增长，如何在保证视觉质量的前提下降低存储与传输成本成为关键问题。许多图像压缩方法的数学内核可以归结为线性变换与矩阵分解：通过基变换将信号表达在频域或其他基下以实现能量聚集，或通过低秩分解提取主要成分以实现有效近似。
 
-随着数字图像与多媒体技术的迅速发展，图像数据规模不断增长。
-如何在保证图像质量的前提下降低存储与传输成本，成为图像处理领域的重要问题。
-图像压缩技术正是在这一背景下发展起来的，而其中大量方法均可归结为线性代数中的矩阵运算与线性变换。
-
+本文以线性代数为主线，先介绍离散傅里叶变换（DFT/FFT）的矩阵表示与分治分解思想，再从统计与代数两视角阐述基于奇异值分解（SVD/PAC）的低秩近似与最优性。随后通过在 Kodak 数据集上的实验评估不同保留秩 $k$ 与不同图像内容下的重建质量与压缩率的权衡，并讨论工程实现中精度与存储格式带来的实际问题。
+% =========================================================
+% 2. FFT数学原理
+% =========================================================
 \section{快速傅里叶变换（FFT）}
 快速傅里叶变换（Fast Fourier Transform，FFT）是离散傅里叶变换（Discrete Fourier Transform，DFT）的一种高效计算方法。
 尽管 FFT 常被视为算法层面的优化，但从线性代数的角度来看，其本质是对离散傅里叶线性变换所对应矩阵结构的分解与重排。
@@ -60,15 +60,15 @@
 
 设 $f(t)$ 是关于时间 $t$ 的函数，则傅立叶变换可以检测频率 $\omega$ 的周期在 $f(t)$ 出现的程度：
 
-\begin{equation*}
+\begin{equation}
 F(\omega)=\mathbb{F}[f(t)]=\int_{-\infty}^{\infty}f(t)\mathrm{e}^{-\mathrm{i}{\omega}t}dt
-\end{equation*}
+\end{equation}
 
 它的逆变换是
 
-\begin{equation*}
+\begin{equation}
 f(t)=\mathbb{F}^{-1}[F(\omega)]=\frac{1}{2\pi}\int_{-\infty}^{\infty}F(\omega)\mathrm{e}^{\mathrm{i}{\omega}t}d\omega
-\end{equation*}
+\end{equation}
 
 逆变换的形式与正变换非常类似，分母 $2\pi$ 恰好是指数函数的周期。
 
@@ -82,27 +82,27 @@ f(t)=\mathbb{F}^{-1}[F(\omega)]=\frac{1}{2\pi}\int_{-\infty}^{\infty}F(\omega)\m
 
 设 $\{x_n\}_{n=0}^{N-1}$ 是某一满足有限性条件的序列，它的离散傅里叶变换（DFT）为：
 
-\begin{equation*}
+\begin{equation}
 X_k=\sum_{n=0}^{N-1}x_n\mathrm{e}^{-\mathrm{i}\frac{2\pi}{N}kn}
-\end{equation*}
+\end{equation}
 
 通常以符号 $\mathcal {F}$ 表示这一变换，即
 
-\begin{equation*}
+\begin{equation}
 \hat{x}=\mathcal{F}x
-\end{equation*}
+\end{equation}
 
 类似于积分形式，它的逆离散傅里叶变换（IDFT）为：
 
-\begin{equation*}
+\begin{equation}
 x_n=\frac{1}{N}\sum_{k=0}^{N-1}X_k\mathrm{e}^{\mathrm{i}\frac{2\pi}{N}kn}
-\end{equation*}
+\end{equation}
 
 可以记为：
 
-\begin{equation*}
+\begin{equation}
 x=\mathcal{F}^{-1}\hat{x}
-\end{equation*}
+\end{equation}
 
 实际上，DFT 和 IDFT 变换式前面的归一化系数并不重要。在上面的定义中，DFT 和 IDFT 前的系数分别为 $1$ 和 $\frac {1}{N}$。有时我们会将这两个系数都改 $\frac{1}{{\sqrt{N}}}$。
 
@@ -113,7 +113,7 @@ x=\mathcal{F}^{-1}\hat{x}
 \subsection{矩阵表示}
 由于离散傅立叶变换是一个线性算子，所以它可以用矩阵乘法来描述。在矩阵表示法中，离散傅立叶变换表示如下：
 
-\begin{equation*}
+\begin{equation}
 \begin{bmatrix}
     X_{0}  \\
     X_{1}  \\
@@ -136,7 +136,7 @@ x=\mathcal{F}^{-1}\hat{x}
     \vdots \\
     x_{N-1}
 \end{bmatrix}
-\end{equation*}
+\end{equation}
 
 其中$\omega = \mathrm{e}^{-\mathrm{i}\frac{2\pi}{N}}$表示N次单位根。
 
@@ -152,9 +152,9 @@ x=\mathcal{F}^{-1}\hat{x}
 \end{equation*}
 
 离散傅里叶变换可以表示为如下线性变换：
-\begin{equation*}
+\begin{equation}
 \mathbf{X} = F_N \mathbf{x},
-\end{equation*}
+\end{equation}
 
 其中 $F_N \in \mathbb{C}^{N \times N}$ 为离散傅里叶变换矩阵
 
@@ -183,7 +183,7 @@ X_k = f(\omega_N^k), \quad k = 0,1,\dots,N-1.
 直接计算离散傅里叶变换需要进行一次 $N \times N$ 的矩阵--向量乘法，其时间复杂度为 $O(N^2)$。
 FFT 的核心思想在于，DFT 矩阵具有高度结构化的形式，可以利用分治的思想通过置换矩阵与分块矩阵分解为多个低维 DFT 矩阵的组合，
 将复杂度降到 $O(N \log N)$。
-进一步还可以使用蝶形运算、位逆序置换等技巧加速运算。
+进一步还可以使用蝶形运算、位逆序置换等技巧加速运算。有关实现细节可参见 OI Wiki \cite{oiwiki}。
 
 这一过程本质上是将一个高维线性算子分解为若干低维线性算子的复合，体现了线性代数中通过矩阵分解与基重排来降低计算复杂度的基本思想。
 
@@ -198,7 +198,7 @@ FFT 的核心思想在于，DFT 矩阵具有高度结构化的形式，可以利
 当 $N$ 为 $2$ 的幂时（事实上当N不为2的幂，我们可以通过补零的方式构造成2的幂），$F_N$ 具有良好的递归结构。
 
 通过对输入向量进行适当的重排（对应于置换矩阵），$F_N$ 可以分解为如下形式：
-\begin{equation*}
+\begin{equation}
 F_N
 =
 \begin{pmatrix}
@@ -210,7 +210,7 @@ F_{N/2} & 0 \\
 0 & F_{N/2}
 \end{pmatrix}
 P,
-\end{equation*}
+\end{equation}
 
 其中 $P$ 为置换矩阵，$D$ 为由单位复根构成的对角矩阵，$F_{N/2}$ 为低维离散傅里叶变换矩阵。
 
@@ -221,7 +221,7 @@ P,
 
 在快速傅里叶变换的分治过程中，所谓的“蝶形运算”并非单纯的计算技巧，而是局部线性变换在低维子空间中的体现。
 设在 FFT 的某一层分治中，已得到两个子问题的结果 $u$ 与 $v$，则其合并过程可表示为
-\begin{equation*}
+\begin{equation}
 \begin{pmatrix}
 y_1 \\
  y_2
@@ -234,7 +234,7 @@ y_1 \\
 \begin{pmatrix}u \\
  v
 \end{pmatrix},
-\end{equation*}
+\end{equation}
 其中 $\omega$ 为相应的单位复根。
 
 从线性代数角度看，上式表明蝶形运算实质上是一个作用在二维向量空间上的线性变换。
@@ -250,7 +250,7 @@ y_1 \\
 这些性质使 FFT 成为图像压缩中重要的理论工具。
 
 % =========================================================
-% 4. PAC数学原理
+% 3. PAC数学原理
 % =========================================================
 \section{PAC数学原理}
 PAC（Principal Component Analysis of Channels，通道主成分分析）算法是线性代数理论在图像压缩领域的典型应用。尽管其在应用层面常被视为一种基于统计特性的特征提取技术，但其数学内核植根于矩阵的低秩近似理论。本节将从统计学与代数学两个维度，严谨阐述该算法的数学原理。
@@ -304,7 +304,7 @@ PAC 压缩的核心步骤是矩阵截断（Truncation）。我们仅保留前 $k
 该定理从数学上严格保证了，在给定的存储预算（即秩 $k$）下，截断 SVD 能够保留原始图像最多的能量信息，是理论上的最优线性压缩方案。
 
 % =========================================================
-% 5. PAC实验分析
+% 4. PAC实验分析
 % =========================================================
 \section{PAC实验分析}
 
@@ -318,7 +318,7 @@ PAC 压缩的核心步骤是矩阵截断（Truncation）。我们仅保留前 $k
 \end{enumerate}
 
 \subsection{实验设置}
-实验采用 Kodak Lossless True Color Image Suite 数据集，该数据集包含多幅纹理复杂度各异的高分辨率彩色图像（如 `kodim01.png` 至 `kodim24.png`）。我们设定主成分保留数 $k \in \{5, 10, 20, 40, 80\}$，并采用以下指标进行量化评估：
+实验采用 Kodak Lossless True Color Image Suite 数据集，该数据集包含多幅纹理复杂度各异的高分辨率彩色图像（如 `kodim01.png` 至 `kodim10.png`）。我们设定主成分保留数 $k \in \{5, 10, 20, 40, 80\}$，并采用以下指标进行量化评估：
 \begin{itemize}
     \item \textbf{PSNR (峰值信噪比)}：衡量图像重建质量的客观标准，单位 dB，数值越高代表失真越小。
     \item \textbf{SSIM (结构相似性)}：反映人眼对图像亮度、对比度和结构信息的感知程度，范围 $[0, 1]$，接近 1 表示结构保留完美。
@@ -370,14 +370,19 @@ PAC 压缩的核心步骤是矩阵截断（Truncation）。我们仅保留前 $k
 这验证了 PAC 算法对图像内容的频谱分布具有高度敏感性。Image 10 包含更多平滑区域，其能量在频域上更集中于少数几个最大的奇异值（奇异值衰减速度更快），因此该算法能以更低的信息代价（更小的 $k$）还原更多的图像信息。这一特性也体现了 SVD 作为一种“自适应基变换”，相较于固定基变换（如 FFT/DCT）更能捕捉数据的内在统计结构。
 
 % =========================
+% 结论
+% =========================
+\section{结论}
+
+本文以线性代数为视角系统分析了 FFT 与基于 SVD（PAC）的图像压缩方法。理论上，FFT 提供了高效的矩阵分解与基变换框架，适用于频域能量集中的压缩策略；SVD/PAC 则通过截断奇异值实现最优的低秩近似（由 Eckart--Young--Mirsky 定理保证）。实验表明：保留奇异值个数 $k$ 是决定重建质量（PSNR、SSIM）与压缩率之间权衡的关键参数，图像的纹理复杂度会显著影响该权衡；此外，浮点存储精度在高 $k$ 时可能导致“负压缩”，因此在工程实践中需配合合适的量化与编码策略以实现真实的存储收益。未来工作可集中于改进量化与编码方法，并在更多图像类别上验证算法的稳健性。
+
+% =========================
 % 参考文献
 % =========================
 \begin{thebibliography}{99}
 
-\bibitem{FFT}
-A.~V. Oppenheim, R.~W. Schafer,
-\textit{Discrete-Time Signal Processing},
-Prentice Hall, 2010.
+\bibitem{oiwiki}
+OI Wiki, ``快速傅里叶变换'', \url{https://oi-wiki.org/math/fft/}, 访问日期：2026-01-01.
 
 \end{thebibliography}
 
